@@ -1,0 +1,154 @@
+@model IEnumerable<whats.Models.UserMessage>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+/* Scoped Chat Styles */
+#userNameSection, #chatSection, .chat-container {
+    font-family: Arial, sans-serif;
+}
+
+#chatBox {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    max-width: 70%;
+    clear: both;
+}
+
+.user-message {
+    background-color: #e0f7fa;
+    color: #000;
+    float: right;
+    text-align: right;
+}
+
+.admin-message {
+    background-color: #d1c4e9;
+    color: #000;
+    float: left;
+    text-align: left;
+}
+
+.message-input-box, .message-input-box textarea {
+    width: 100%;
+}
+
+.input-field {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.selected-user {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #007bff;
+}
+
+/* Responsive Design */
+@@media (max-width: 768px) {
+    #chatBox {
+        max-height: 400px;
+    }
+}
+</style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+        $(document).ready(function () {
+            var selectedUserId = '';
+            var selectedUserName = '';
+
+            loadAllMessages();
+            pollMessages();
+
+            function loadAllMessages() {
+                $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("GetAllMessages")',
+                    success: function (response) {
+                        $("#chatBox").empty();
+                        response.forEach(function (message) {
+                            displayMessage(message);
+                        });
+                    }
+                });
+            }
+
+            function pollMessages() {
+                setInterval(function () {
+                    loadAllMessages();
+                }, 2000); // Poll every 2 seconds for a more real-time experience
+            }
+
+            function displayMessage(message) {
+                var messageClass = message.IsAdminReply ? 'admin-message' : 'user-message';
+                var messageHtml = '<div class="message ' + messageClass + '" data-userid="' + message.UserId + '" data-username="' + message.UserName + '">';
+                messageHtml += '<strong>' + message.UserName + ':</strong> ' + message.Message;
+                messageHtml += '</div>';
+                $("#chatBox").append(messageHtml);
+            }
+
+            $(document).on('click', '.message', function () {
+                selectedUserId = $(this).data('userid');
+                selectedUserName = $(this).data('username');
+                $('#selectedUser').text('Replying to: ' + selectedUserName);
+            });
+
+            $('#sendReplyButton').click(function () {
+                var replyMessage = $('#adminMessage').val();
+
+                if (selectedUserId && replyMessage) {
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("SendMessage")',
+                        data: { userName: 'Admin', message: replyMessage, userId: selectedUserId, isAdminReply: true },
+                        success: function (response) {
+                            $('#adminMessage').val('');
+                            loadAllMessages();
+                        }
+                    });
+                } else {
+                    alert('Select a user message to reply to and enter a reply message.');
+                }
+            });
+        });
+</script>
+
+
+<div class="chat-container">
+    <div class="chat-header">Admin Chat</div>
+    <div id="chatBox" class="chat-box"></div>
+    <div id="selectedUser" class="selected-user">Select a message to reply</div>
+    <div class="message-input-box">
+        <textarea id="adminMessage" placeholder="Enter your reply" rows="2"></textarea>
+        <button id="sendReplyButton">Send Reply</button>
+    </div>
+</div>
+

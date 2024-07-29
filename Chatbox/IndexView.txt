@@ -1,0 +1,149 @@
+@{
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+/* Scoped Chat Styles */
+#userNameSection, #chatSection, .chat-container {
+    font-family: Arial, sans-serif;
+}
+
+#chatBox {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    max-width: 70%;
+    clear: both;
+}
+
+.user-message {
+    background-color: #e0f7fa;
+    color: #000;
+    float: right;
+    text-align: right;
+}
+
+.admin-message {
+    background-color: #d1c4e9;
+    color: #000;
+    float: left;
+    text-align: left;
+}
+
+.message-input-box, .message-input-box textarea {
+    width: 100%;
+}
+
+.input-field {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+.selected-user {
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #007bff;
+}
+
+/* Responsive Design */
+@@media (max-width: 768px) {
+    #chatBox {
+        max-height: 400px;
+    }
+}
+</style>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+        $(document).ready(function () {
+            var userId = '';
+
+            $("#startChatButton").click(function () {
+                var userName = $("#userName").val();
+                if (userName) {
+                    $("#chatSection").show();
+                    $("#userNameSection").hide();
+                    userId = Date.now().toString() + Math.random().toString(36).substring(2);
+                    $("#userId").val(userId);
+                    pollMessages(); // Start polling for messages
+                }
+            });
+
+            $("#sendMessageButton").click(function () {
+                var userName = $("#userName").val();
+                var message = $("#message").val();
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("SendMessage")',
+                    data: { userName: userName, message: message, userId: userId },
+                    success: function (response) {
+                        displayMessage(response);
+                        $("#message").val('');
+                    }
+                });
+            });
+
+            function displayMessage(message) {
+                var messageClass = message.IsAdminReply ? 'admin-message' : 'user-message';
+                var messageHtml = '<div class="message ' + messageClass + '"><strong>' + message.UserName + ':</strong> ' + message.Message + '</div>';
+                $("#chatBox").append(messageHtml);
+            }
+
+            function pollMessages() {
+                setInterval(function () {
+                    $.ajax({
+                        type: "GET",
+                        url: '@Url.Action("GetUserMessages")',
+                        data: { userId: userId },
+                        success: function (response) {
+                            $("#chatBox").empty();
+                            response.forEach(function (message) {
+                                displayMessage(message);
+                            });
+                        }
+                    });
+                }, 2000); // Poll every 2 seconds for a more real-time experience
+            }
+        });
+</script>
+
+<div id="userNameSection" class="centered-box">
+    <input type="text" id="userName" placeholder="Enter your name" class="input-field" />
+    <button id="startChatButton" class="btn">Start Chat</button>
+</div>
+<div id="chatSection" style="display:none;" class="chat-section">
+    <input type="hidden" id="userId" />
+    <div id="chatBox" class="chat-box"></div>
+    <div class="message-input-box">
+        <textarea id="message" placeholder="Enter your message" class="input-field"></textarea>
+        <button id="sendMessageButton" class="btn">Send</button>
+    </div>
+</div>
+

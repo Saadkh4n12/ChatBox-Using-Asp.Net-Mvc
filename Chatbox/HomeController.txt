@@ -1,0 +1,49 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Mvc;
+using whats.Models;
+// Ensure this namespace matches the namespace in UserMessage.cs
+public class HomeController : Controller
+{
+    private static List<UserMessage> userMessages = new List<UserMessage>();
+
+    public ActionResult Index()
+    {
+        return View();
+    }
+
+    public ActionResult Admin()
+    {
+        return View(userMessages);
+    }
+
+    [HttpPost]
+    public ActionResult SendMessage(string userName, string message, string userId, bool isAdminReply = false)
+    {
+        var userMessage = new UserMessage
+        {
+            UserName = userName,
+            Message = message,
+            IsAdminReply = isAdminReply,
+            UserId = userId
+        };
+
+        userMessages.Add(userMessage);
+        return Json(userMessage);
+    }
+
+    [HttpGet]
+    public ActionResult GetUserMessages(string userId)
+    {
+        var userSpecificMessages = userMessages
+            .Where(m => m.UserId == userId || (m.IsAdminReply && m.UserId == userId))
+            .ToList();
+        return Json(userSpecificMessages, JsonRequestBehavior.AllowGet);
+    }
+
+    [HttpGet]
+    public ActionResult GetAllMessages()
+    {
+        return Json(userMessages, JsonRequestBehavior.AllowGet);
+    }
+}

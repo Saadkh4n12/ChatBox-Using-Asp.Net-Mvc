@@ -1,0 +1,14 @@
+"I developed this real-time chat application with ASP.NET MVC, leveraging AJAX and JavaScript for a sleek and simple design."
+
+
+
+
+isko simply apne project me add karsakte hain kuch steps ke through
+
+1:- is Homecontroller ki sbhi content ko copy krke Apne HomeController pe paste krdo
+2:- uske index ka view create kro aur is index ke sbhi content ko us index pe paste krdo
+3:- uske Admin ka view create kro aur is Admin ke sbhi content ko us Admin pe paste krdo
+4:- Apne project ke Model Folder me Class create kro jiska name UserMessage ho aur
+is userMessage ke content ko waha pe paste krdo
+
+Aur dhyan rahe apne project ka Name Whats rkhna agar dusra rkhte hain to update krna hoga
